@@ -1,0 +1,89 @@
+:root {
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --panel-soft: #f6f8fc;
+  --line: rgba(28, 45, 80, 0.14);
+  --text: #111827;
+  --muted: #5f6b7a;
+  --blue: #1769e0;
+  --purple: #5b4fd6;
+  --green: #158f61;
+}
+
+.stApp {
+  background: var(--bg);
+  color: var(--text);
+}
+
+[data-testid="stSidebar"] {
+  background: #f7f9fd;
+  border-right: 1px solid var(--line);
+}
+
+h1, h2, h3 { letter-spacing: 0; }
+
+.hero { padding: 18px 0 10px; }
+
+.hero-title {
+  font-size: clamp(2rem, 5vw, 4.8rem);
+  line-height: 1;
+  font-weight: 800;
+  margin: 0;
+}
+
+.hero-subtitle {
+  color: var(--muted);
+  font-size: 1.15rem;
+  margin-top: 8px;
+}
+
+.metric-card {
+  min-height: 126px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, .08);
+}
+
+.metric-label {
+  color: var(--muted);
+  font-size: .78rem;
+  text-transform: uppercase;
+}
+
+.metric-value {
+  font-size: 1.8rem;
+  font-weight: 760;
+  margin-top: 8px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(21,143,97,.28);
+  background: rgba(21,143,97,.08);
+  color: #0f6f49;
+  font-weight: 650;
+}
+
+.small-muted {
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.stButton button, .stDownloadButton button {
+  border-radius: 8px;
+  border: 1px solid rgba(23, 105, 224, .36);
+  background: linear-gradient(90deg, #1769e0, #5b4fd6);
+  color: white;
+  font-weight: 700;
+}
+
+[data-testid="stDataFrame"], [data-testid="stTable"] {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
