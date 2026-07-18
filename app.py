@@ -58,7 +58,7 @@ def initialize_application():
     initialize_state()
 
     defaults = {
-        "api_url": "https://qube-predict-api.onrender.com",
+        "api_url": "https://qube-predict.onrender.com",
         "authenticated": False,
         "jwt": None,
         "refresh_token": None,
