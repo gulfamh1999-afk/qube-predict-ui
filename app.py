@@ -128,7 +128,6 @@ def main():
 
     page = build_navigation()
 
-    st.session_state.page = page
 
     try:
 
