@@ -75,8 +75,6 @@ if submitted:
 
             st.success("Login successful!")
 
-            st.session_state.page = "Single Prediction"
-
             st.rerun()
 
         except Exception as e:
@@ -88,8 +86,6 @@ if submitted:
                     st.session_state.api_key = user.get("api_key")
 
                 st.success("Login successful!")
-
-                st.session_state.page = "Dashboard"
 
                 st.rerun()
 

@@ -13,7 +13,6 @@ def render_signup(client):
     if st.session_state.get("authenticated", False):
         st.success("You are already signed in.")
         if st.button("Go to Dashboard", use_container_width=True):
-            st.session_state.page = "Dashboard"
             st.rerun()
         return
 
@@ -96,7 +95,6 @@ def render_signup(client):
                     use_container_width=True,
                     key="goto_login_after_signup",
                 ):
-                    st.session_state.page = "Login"
                     st.rerun()
 
             except Exception as e:

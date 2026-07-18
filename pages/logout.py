@@ -13,9 +13,7 @@ def render_logout(client):
         if st.button(
             "Go to Login",
             use_container_width=True,
-        ):
-            st.session_state.page = "Login"
-            st.rerun()
+        ):            st.rerun()
 
         return
 
@@ -67,5 +65,4 @@ def render_logout(client):
             "Cancel",
             use_container_width=True,
         ):
-            st.session_state.page = "Dashboard"
             st.rerun()
