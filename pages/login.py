@@ -13,7 +13,7 @@ def render_login(client):
     if st.session_state.get("authenticated", False):
         st.success("You are already logged in.")
         if st.button("Go to Dashboard", use_container_width=True):
-            st.session_state.page = "Dashboard"
+            st.session_state.page = "Single Prediction"
             st.rerun()
         return
 
@@ -39,29 +39,49 @@ def render_login(client):
             use_container_width=True,
         )
 
-    if submitted:
+if submitted:
 
-        if not email or not password:
-            st.error("Please enter your email and password.")
-            return
+    if not email or not password:
+        st.error("Please enter your email and password.")
+        return
 
-        with st.spinner("Signing in..."):
+    with st.spinner("Signing in..."):
 
-            try:
+        try:
 
-                token = client.login(
-                    email=email,
-                    password=password,
-                    remember=remember,
-                )
+            st.write("Step 1: Calling login...")
 
-                # Load profile
-                user = client.me()
+            token = client.login(
+                email=email,
+                password=password,
+                remember=remember,
+            )
 
-                st.session_state.authenticated = True
-                st.session_state.jwt = token["access_token"]
-                st.session_state.refresh_token = token["refresh_token"]
-                st.session_state.user = user
+            st.write("✅ Login returned")
+
+            st.write("Step 2: Loading profile...")
+
+            user = client.me()
+
+            st.write("✅ Profile loaded")
+
+            st.session_state.authenticated = True
+            st.session_state.jwt = token["access_token"]
+            st.session_state.refresh_token = token["refresh_token"]
+            st.session_state.user = user
+
+            if isinstance(user, dict):
+                st.session_state.api_key = user.get("api_key")
+
+            st.success("Login successful!")
+
+            st.session_state.page = "Single Prediction"
+
+            st.rerun()
+
+        except Exception as e:
+
+            st.error(str(e))              st.session_state.user = user
 
                 # Try loading API key if backend returns it
                 if isinstance(user, dict):
