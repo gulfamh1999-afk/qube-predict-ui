@@ -19,21 +19,13 @@ from pages.logout import render_logout
 # APPLICATION PAGES
 # ==========================================================
 
-from pages.dashboard import render_dashboard
 from pages.profile import render_profile
 from pages.billing import render_billing
 from pages.billing_history import render_billing_history
 from pages.usage import render_usage
 from pages.api_keys import render_api_keys
 
-from pages.models import render_models
 from pages.single_prediction import render_single_prediction
-from pages.batch_prediction import render_batch_prediction
-from pages.drug_library import render_drug_library
-from pages.validation_results import render_validation_results
-from pages.model_diagnostics import render_model_diagnostics
-from pages.reports_page import render_reports
-from pages.settings import render_settings
 from pages.about import render_about
 
 
@@ -47,22 +39,15 @@ PUBLIC_PAGES = {
 }
 
 PRIVATE_PAGES = {
-    "Dashboard": render_dashboard,
     "Single Prediction": render_single_prediction,
-    "Batch Prediction": render_batch_prediction,
-    "Models": render_models,
-    "Drug Library": render_drug_library,
     "Usage": render_usage,
     "Billing": render_billing,
     "Billing History": render_billing_history,
     "API Keys": render_api_keys,
     "Profile": render_profile,
-    "Reports": render_reports,
-    "Settings": render_settings,
     "About": render_about,
     "Logout": render_logout,
 }
-
 
 # ==========================================================
 # INITIALIZATION
