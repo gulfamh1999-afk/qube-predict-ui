@@ -13,21 +13,23 @@ from ui.theme import apply_theme, render_sidebar
 
 from pages.login import render_login
 from pages.signup import render_signup
-from pages.logout import render_logout
 
 # ==========================================================
-# APPLICATION PAGES
+# PRIVATE PAGES
 # ==========================================================
 
-from pages.profile import render_profile
+from pages.dashboard import render_dashboard
+from pages.single_prediction import render_single_prediction
+from pages.usage import render_usage
+
 from pages.billing import render_billing
 from pages.billing_history import render_billing_history
-from pages.usage import render_usage
+
 from pages.api_keys import render_api_keys
+from pages.profile import render_profile
 
-from pages.single_prediction import render_single_prediction
 from pages.about import render_about
-
+from pages.logout import render_logout
 
 # ==========================================================
 # PAGE REGISTRY
@@ -39,6 +41,7 @@ PUBLIC_PAGES = {
 }
 
 PRIVATE_PAGES = {
+    "Dashboard": render_dashboard,
     "Single Prediction": render_single_prediction,
     "Usage": render_usage,
     "Billing": render_billing,
@@ -52,6 +55,7 @@ PRIVATE_PAGES = {
 # ==========================================================
 # INITIALIZATION
 # ==========================================================
+
 
 def initialize_application():
 
@@ -75,41 +79,50 @@ def initialize_application():
 # SIDEBAR
 # ==========================================================
 
+
 def build_navigation():
 
-    if st.session_state.authenticated:
-
+    if st.session_state.get("authenticated", False):
         pages = list(PRIVATE_PAGES.keys())
-
     else:
-
         pages = list(PUBLIC_PAGES.keys())
 
-    return render_sidebar(pages)
+    page = render_sidebar(pages)
+
+    if page not in pages:
+        page = pages[0]
+
+    return page
 
 
 # ==========================================================
 # PAGE DISPATCH
 # ==========================================================
 
+
 def render_page(page: str, client: ApiClient):
 
     if page in PUBLIC_PAGES:
-
         PUBLIC_PAGES[page](client)
         return
 
-    if not st.session_state.authenticated:
+    if not st.session_state.get("authenticated", False):
+        render_login(client)
+        return
 
-        st.session_state.page = "Login"
-        st.rerun()
+    renderer = PRIVATE_PAGES.get(page)
 
-    PRIVATE_PAGES[page](client)
+    if renderer is None:
+        st.error(f"Unknown page: {page}")
+        return
+
+    renderer(client)
 
 
 # ==========================================================
 # MAIN
 # ==========================================================
+
 
 def main():
 
@@ -128,17 +141,15 @@ def main():
 
     page = build_navigation()
 
-
     try:
 
         render_page(page, client)
 
     except Exception as e:
 
-        st.error("Application Error")
+        st.error("An unexpected application error occurred.")
 
         with st.expander("Technical Details"):
-
             st.exception(e)
 
 
@@ -147,5 +158,4 @@ def main():
 # ==========================================================
 
 if __name__ == "__main__":
-
     main()

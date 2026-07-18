@@ -4,7 +4,6 @@ import streamlit as st
 
 
 def render_signup(client):
-
     st.title("📝 Create Account")
 
     st.caption("Create your QUBE Predict account")
@@ -12,11 +11,16 @@ def render_signup(client):
     # Already logged in
     if st.session_state.get("authenticated", False):
         st.success("You are already signed in.")
-        if st.button("Go to Dashboard", use_container_width=True):
+
+        if st.button(
+            "Go to Dashboard",
+            use_container_width=True,
+        ):
             st.rerun()
+
         return
 
-    with st.form("signup_form", clear_on_submit=False):
+    with st.form("signup_form"):
 
         full_name = st.text_input(
             "Full Name",
@@ -88,17 +92,18 @@ def render_signup(client):
 
                 st.success("✅ Account created successfully!")
 
-                st.info("Please log in using your new account.")
+                st.info(
+                    "Please log in using your new account."
+                )
 
                 if st.button(
                     "Go to Login",
-                    use_container_width=True,
                     key="goto_login_after_signup",
+                    use_container_width=True,
                 ):
                     st.rerun()
 
             except Exception as e:
-
                 st.error(str(e))
 
     st.divider()
@@ -107,5 +112,4 @@ def render_signup(client):
         "Already have an account? Login",
         use_container_width=True,
     ):
-        st.session_state.page = "Login"
         st.rerun()

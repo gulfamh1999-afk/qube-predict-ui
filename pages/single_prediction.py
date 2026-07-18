@@ -3,98 +3,74 @@ from __future__ import annotations
 from typing import Any
 
 import pandas as pd
-import requests
 import streamlit as st
 
 
-def _api_base_url() -> str:
-    return st.session_state.get("api_url", "").rstrip("/")
+def _extract_model_names(payload: Any) -> list[str]:
+    """
+    Accepts either:
+    - ["DrugA", "DrugB"]
+    - {"models": [...]}
+    """
 
+    if isinstance(payload, list):
+        models = payload
+    elif isinstance(payload, dict):
+        models = payload.get("models", [])
+    else:
+        return []
 
-def _api_headers() -> dict[str, str]:
-    return {
-        "x-api-key": st.session_state.get("api_key", ""),
-        "Content-Type": "application/json",
-    }
-
-
-def _extract_model_names(payload: dict[str, Any]) -> list[str]:
-    models = payload.get("models", [])
-    names: list[str] = []
+    names = []
 
     for model in models:
+
         if isinstance(model, str):
             names.append(model)
+
         elif isinstance(model, dict):
+
             name = (
                 model.get("drug")
                 or model.get("drug_name")
                 or model.get("name")
                 or model.get("model")
             )
+
             if name:
                 names.append(str(name))
 
     return sorted(names)
 
 
-def _fetch_models() -> list[str]:
-    api_url = _api_base_url()
-    api_key = st.session_state.get("api_key", "")
-
-    if not api_url:
-        st.error("API URL is not configured.")
-        return []
-
-    if not api_key:
-        st.error("API key is required.")
-        return []
-
-    try:
-        response = requests.get(
-            f"{api_url}/api/v1/models",
-            headers={"x-api-key": api_key},
-            timeout=30,
-        )
-    except requests.RequestException as exc:
-        st.error(f"Could not load available models: {exc}")
-        return []
-
-    if not response.ok:
-        st.error(_api_error(response, "Could not load available models."))
-        return []
-
-    try:
-        return _extract_model_names(response.json())
-    except ValueError:
-        st.error("Could not load available models: invalid API response.")
-        return []
-
-
-def _api_error(response: requests.Response, fallback: str) -> str:
-    try:
-        detail = response.json().get("detail")
-    except ValueError:
-        detail = response.text
-
-    if detail:
-        return f"{fallback} {detail}"
-
-    return fallback
-
-
 def _sample_from_csv(dataframe: pd.DataFrame) -> dict[str, Any]:
+
     if dataframe.empty:
-        raise ValueError("Uploaded CSV does not contain any samples.")
+        raise ValueError(
+            "Uploaded CSV does not contain any samples."
+        )
 
     if {"gene_name", "value"}.issubset(dataframe.columns):
-        sample = dataframe.set_index("gene_name")["value"].to_dict()
+
+        sample = (
+            dataframe
+            .set_index("gene_name")["value"]
+            .to_dict()
+        )
+
     elif {"gene", "value"}.issubset(dataframe.columns):
-        sample = dataframe.set_index("gene")["value"].to_dict()
+
+        sample = (
+            dataframe
+            .set_index("gene")["value"]
+            .to_dict()
+        )
+
     else:
+
         sample = dataframe.iloc[0].to_dict()
 
     sample.pop("sample_id", None)
+
     return {
         str(gene): value
         for gene, value in sample.items()
@@ -102,18 +78,43 @@ def _sample_from_csv(dataframe: pd.DataFrame) -> dict[str, Any]:
     }
 
 
-def render_single_prediction() -> None:
-    st.subheader("Single Prediction")
+def render_single_prediction(client):
 
-    models = _fetch_models()
+    st.title("🧬 Single Prediction")
+
+    if not st.session_state.get("authenticated", False):
+        st.warning("Please login first.")
+        return
+
+    # --------------------------------------------------
+    # Load Models
+    # --------------------------------------------------
+
+    try:
+
+        models = _extract_model_names(
+            client.models()
+        )
+
+    except Exception as e:
+
+        st.error(f"Unable to load models.\n\n{e}")
+
+        return
+
+    if not models:
+
+        st.warning("No prediction models are available.")
+
+        return
+
     selected_drug = st.selectbox(
         "Drug",
-        options=models,
-        disabled=not models,
+        models,
     )
 
     uploaded_file = st.file_uploader(
-        "Gene-expression CSV",
+        "Gene Expression CSV",
         type=["csv"],
     )
 
@@ -121,49 +122,95 @@ def render_single_prediction() -> None:
         return
 
     try:
+
         dataframe = pd.read_csv(uploaded_file)
-    except Exception as exc:
-        st.error(f"Could not read CSV: {exc}")
+
+    except Exception as e:
+
+        st.error(f"Unable to read CSV.\n\n{e}")
+
         return
 
-    if st.button("Predict", disabled=not selected_drug):
+    st.dataframe(
+        dataframe.head(),
+        use_container_width=True,
+    )
+
+    if st.button(
+        "Run Prediction",
+        type="primary",
+        use_container_width=True,
+    ):
+
         try:
-            sample = _sample_from_csv(dataframe)
-        except ValueError as exc:
-            st.error(str(exc))
+
+            sample = _sample_from_csv(
+                dataframe
+            )
+
+        except Exception as e:
+
+            st.error(str(e))
+
             return
 
-        payload = {
-            "drug": selected_drug,
-            "sample": sample,
-        }
+        with st.spinner(
+            "Running prediction..."
+        ):
 
-        with st.spinner("Running prediction..."):
             try:
-                response = requests.post(
-                    f"{_api_base_url()}/api/v1/predict",
-                    json=payload,
-                    headers=_api_headers(),
-                    timeout=60,
+
+                result = client.predict(
+                    drug=selected_drug,
+                    sample=sample,
                 )
-            except requests.RequestException as exc:
-                st.error(f"Prediction failed: {exc}")
+
+            except Exception as e:
+
+                st.error(
+                    f"Prediction failed.\n\n{e}"
+                )
+
                 return
 
-        if not response.ok:
-            st.error(_api_error(response, "Prediction failed."))
-            return
+        st.success("Prediction completed.")
 
-        try:
-            result = response.json()
-        except ValueError:
-            st.error("Prediction failed: invalid API response.")
-            return
+        st.divider()
 
-        st.metric("Prediction", result.get("prediction"))
-        st.metric("Probability", result.get("probability"))
-        st.metric("Confidence", result.get("confidence"))
+        col1, col2, col3 = st.columns(3)
 
+        with col1:
 
-def render() -> None:
-    render_single_prediction()
+            st.metric(
+                "Prediction",
+                result.get(
+                    "prediction",
+                    "-",
+                ),
+            )
+
+        with col2:
+
+            st.metric(
+                "Probability",
+                result.get(
+                    "probability",
+                    "-",
+                ),
+            )
+
+        with col3:
+
+            st.metric(
+                "Confidence",
+                result.get(
+                    "confidence",
+                    "-",
+                ),
+            )
+
+        st.divider()
+
+        st.subheader("Raw API Response")
+
+        st.json(result)

@@ -4,7 +4,6 @@ import streamlit as st
 
 
 def render_billing(client):
-
     st.title("💳 Subscription & Billing")
 
     if not st.session_state.get("authenticated", False):
@@ -12,7 +11,7 @@ def render_billing(client):
         return
 
     # ----------------------------------------------------------
-    # Load current subscription
+    # Current Subscription
     # ----------------------------------------------------------
 
     try:
@@ -20,22 +19,18 @@ def render_billing(client):
     except Exception:
         subscription = {
             "plan": "Free",
-            "status": "inactive",
+            "status": "Inactive",
         }
 
     # ----------------------------------------------------------
-    # Load available plans
+    # Available Plans
     # ----------------------------------------------------------
 
     try:
         plans = client.plans()
     except Exception as e:
-        st.error(f"Unable to load plans.\n\n{e}")
+        st.error(f"Unable to load subscription plans.\n\n{e}")
         return
-
-    # ----------------------------------------------------------
-    # Current Subscription
-    # ----------------------------------------------------------
 
     st.subheader("Current Subscription")
 
@@ -55,11 +50,10 @@ def render_billing(client):
 
     with col3:
         renewal = subscription.get("renewal_date")
-
-        if renewal:
-            st.metric("Renewal", renewal[:10])
-        else:
-            st.metric("Renewal", "--")
+        st.metric(
+            "Renewal",
+            renewal[:10] if renewal else "--",
+        )
 
     st.divider()
 
@@ -68,6 +62,10 @@ def render_billing(client):
     # ----------------------------------------------------------
 
     st.subheader("Available Plans")
+
+    if not plans:
+        st.info("No subscription plans are currently available.")
+        return
 
     cols = st.columns(len(plans))
 
@@ -89,7 +87,7 @@ def render_billing(client):
                     f"{plan['predictions']:,}",
                 )
 
-            if "contact" in plan:
+            if plan.get("contact"):
                 st.info(plan["contact"])
 
             if plan_name != "Enterprise":
@@ -101,31 +99,26 @@ def render_billing(client):
                 ):
 
                     try:
-
-                        result = client.create_subscription(
-                            plan_name
-                        )
+                        result = client.create_subscription(plan_name)
 
                         st.success(
                             "Subscription created successfully."
                         )
 
-                        if result.get("razorpay_short_url"):
+                        checkout = result.get("razorpay_short_url")
 
+                        if checkout:
                             st.link_button(
                                 "Proceed to Razorpay Checkout",
-                                result["razorpay_short_url"],
+                                checkout,
                                 use_container_width=True,
                             )
-
                         else:
-
                             st.warning(
-                                "No Razorpay checkout URL returned."
+                                "Checkout link was not returned by the server."
                             )
 
                     except Exception as e:
-
                         st.error(str(e))
 
     st.divider()
@@ -142,8 +135,7 @@ def render_billing(client):
         st.subheader("Manage Subscription")
 
         st.warning(
-            "Cancelling your subscription will keep it active "
-            "until the current billing period ends."
+            "Cancelling your subscription keeps it active until the current billing period ends."
         )
 
         if st.button(
@@ -153,18 +145,16 @@ def render_billing(client):
         ):
 
             try:
-
                 result = client.cancel_subscription()
 
                 st.success(
                     result.get(
                         "message",
-                        "Subscription cancelled."
+                        "Subscription cancelled successfully."
                     )
                 )
 
                 st.rerun()
 
             except Exception as e:
-
                 st.error(str(e))

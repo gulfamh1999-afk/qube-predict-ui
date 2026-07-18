@@ -5,7 +5,6 @@ import streamlit as st
 
 
 def render_billing_history(client):
-
     st.title("🧾 Billing History")
 
     if not st.session_state.get("authenticated", False):
@@ -18,7 +17,6 @@ def render_billing_history(client):
 
     try:
         payments = client.billing_history()
-
     except Exception as e:
         st.error(f"Unable to load billing history.\n\n{e}")
         return
@@ -32,7 +30,7 @@ def render_billing_history(client):
     # ----------------------------------------------------------
 
     total_paid = sum(
-        payment.get("amount", 0) or 0
+        (payment.get("amount") or 0)
         for payment in payments
     )
 
@@ -47,16 +45,10 @@ def render_billing_history(client):
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.metric(
-            "Total Payments",
-            total_transactions,
-        )
+        st.metric("Total Payments", total_transactions)
 
     with col2:
-        st.metric(
-            "Successful",
-            successful,
-        )
+        st.metric("Successful", successful)
 
     with col3:
         st.metric(
@@ -74,14 +66,13 @@ def render_billing_history(client):
 
     for payment in payments:
 
-        invoice = payment.get("invoice_url")
-
         rows.append(
             {
                 "Date": payment.get("paid_at")
-                or payment.get("created_at"),
+                or payment.get("created_at")
+                or "-",
 
-                "Amount": f"₹{payment.get('amount', 0):,.2f}",
+                "Amount": f"₹{(payment.get('amount') or 0):,.2f}",
 
                 "Currency": payment.get(
                     "currency",
@@ -98,7 +89,10 @@ def render_billing_history(client):
                     "-",
                 ),
 
-                "Invoice": invoice if invoice else "-",
+                "Invoice": payment.get(
+                    "invoice_url",
+                    "-",
+                ),
             }
         )
 
@@ -113,16 +107,19 @@ def render_billing_history(client):
     st.divider()
 
     # ----------------------------------------------------------
-    # Detailed Payment Cards
+    # Payment Details
     # ----------------------------------------------------------
 
     st.subheader("Payment Details")
 
     for payment in payments:
 
-        status = payment.get("status", "Unknown").title()
+        amount = payment.get("amount") or 0
 
-        amount = payment.get("amount", 0)
+        status = payment.get(
+            "status",
+            "Unknown",
+        ).title()
 
         paid_at = (
             payment.get("paid_at")
@@ -135,8 +132,7 @@ def render_billing_history(client):
         ):
 
             st.write(
-                f"**Payment ID:** "
-                f"{payment.get('razorpay_payment_id', '-')}"
+                f"**Payment ID:** {payment.get('razorpay_payment_id', '-')}"
             )
 
             st.write(
@@ -144,8 +140,7 @@ def render_billing_history(client):
             )
 
             st.write(
-                f"**Currency:** "
-                f"{payment.get('currency', 'INR')}"
+                f"**Currency:** {payment.get('currency', 'INR')}"
             )
 
             st.write(
@@ -156,10 +151,11 @@ def render_billing_history(client):
                 f"**Paid At:** {paid_at}"
             )
 
-            if payment.get("invoice_url"):
+            invoice = payment.get("invoice_url")
 
+            if invoice:
                 st.link_button(
                     "Open Invoice",
-                    payment["invoice_url"],
+                    invoice,
                     use_container_width=True,
                 )

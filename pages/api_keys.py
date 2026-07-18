@@ -4,7 +4,6 @@ import streamlit as st
 
 
 def render_api_keys(client):
-
     st.title("🔑 API Keys")
 
     if not st.session_state.get("authenticated", False):
@@ -16,22 +15,14 @@ def render_api_keys(client):
     # ----------------------------------------------------------
 
     try:
-
         user = client.me()
-
         st.session_state.user = user
 
-        api_key = (
-            user.get("api_key")
-            or st.session_state.get("api_key")
-        )
-
+        api_key = user.get("api_key") or st.session_state.get("api_key")
         st.session_state.api_key = api_key
 
     except Exception as e:
-
-        st.error(f"Unable to load API Key.\n\n{e}")
-
+        st.error(f"Unable to load API key.\n\n{e}")
         return
 
     # ----------------------------------------------------------
@@ -41,24 +32,17 @@ def render_api_keys(client):
     st.subheader("Current API Key")
 
     if api_key:
-
         st.text_input(
             "API Key",
             value=api_key,
             disabled=True,
         )
 
-        st.code(api_key)
-
         st.caption(
-            "Use this API key to authenticate external requests to the QUBE Predict REST API."
+            "Use this API key to authenticate requests to the QUBE Predict REST API."
         )
-
     else:
-
-        st.warning(
-            "No API Key has been assigned to this account."
-        )
+        st.warning("No API key has been assigned to this account.")
 
     st.divider()
 
@@ -66,19 +50,18 @@ def render_api_keys(client):
     # Example Usage
     # ----------------------------------------------------------
 
-    st.subheader("Example")
+    st.subheader("Example Request")
 
     api_url = st.session_state.get(
         "api_url",
-        "https://qube-predict-api.onrender.com",
+        "https://qube-predict.onrender.com",
     )
 
-    example = f"""
-curl -X POST "{api_url}/api/v1/predict" \\
+    example = f"""curl -X POST "{api_url}/api/v1/predict" \\
 -H "x-api-key: {api_key or 'YOUR_API_KEY'}" \\
 -H "Content-Type: application/json" \\
 -d '{{
-  "drug":"Gemcitabine",
+  "drug": "Gemcitabine",
   "sample": {{
     "gene1": 0.42,
     "gene2": 1.81
@@ -99,30 +82,18 @@ curl -X POST "{api_url}/api/v1/predict" \\
     col1, col2 = st.columns(2)
 
     with col1:
-
-        st.metric(
-            "Authentication",
-            "API Key",
-        )
-
-        st.metric(
-            "Method",
-            "POST",
-        )
+        st.metric("Authentication", "API Key")
+        st.metric("Method", "POST")
 
     with col2:
-
-        st.metric(
-            "Format",
-            "JSON",
-        )
-
-        st.metric(
-            "Version",
-            "v1",
-        )
+        st.metric("Format", "JSON")
+        st.metric("Version", "v1")
 
     st.divider()
+
+    # ----------------------------------------------------------
+    # Available Endpoints
+    # ----------------------------------------------------------
 
     st.subheader("Available Endpoints")
 
@@ -135,10 +106,7 @@ curl -X POST "{api_url}/api/v1/predict" \\
     ]
 
     for method, endpoint in endpoints:
-
-        st.markdown(
-            f"**{method}** `{endpoint}`"
-        )
+        st.markdown(f"**{method}** `{endpoint}`")
 
     st.divider()
 
@@ -150,15 +118,14 @@ curl -X POST "{api_url}/api/v1/predict" \\
         """
 **Keep your API key secure.**
 
-• Never commit it to GitHub.
-
-• Never expose it inside frontend JavaScript.
-
-• Rotate the key immediately if it is compromised.
-
-• Use HTTPS for all production requests.
+- Never commit it to GitHub.
+- Never expose it in frontend JavaScript.
+- Rotate it immediately if you believe it has been compromised.
+- Always use HTTPS when accessing the API.
 """
     )
+
+    st.divider()
 
     # ----------------------------------------------------------
     # Future Feature
@@ -173,5 +140,5 @@ curl -X POST "{api_url}/api/v1/predict" \\
     )
 
     st.caption(
-        "Future versions will allow secure API key rotation."
+        "Future versions will support secure API key rotation."
     )

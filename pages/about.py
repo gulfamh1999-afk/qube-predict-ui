@@ -3,22 +3,59 @@ from __future__ import annotations
 import streamlit as st
 
 
-def render_about() -> None:
-    st.title("About QUBE2")
+def render_about(client):
+    st.title("🧬 About QUBE Predict")
+
     st.markdown(
         """
-        QUBE2 is a graph-based drug response prediction engine that represents genes as an
-        interaction graph, expands samples into topology, spatial, spectral and quantum-inspired
-        descriptor banks, selects a compact descriptor set, and trains a Random Forest backend.
+        **QUBE Predict** is a cloud-based AI platform for drug response prediction.
 
-        The Streamlit application is an interface layer only. It imports the validated engine,
-        uses its callable classifier and reports, and leaves graph construction, descriptor
-        generation, feature selection, cross validation and prediction logic unchanged.
+        The platform combines graph-based feature engineering with machine learning
+        to predict therapeutic response from molecular data. Predictions are served
+        through a secure REST API and accessed via this Streamlit web application.
+
+        This frontend acts solely as a client application. All authentication,
+        prediction, billing, user management, and API operations are performed by
+        the QUBE Predict backend.
         """
     )
-    st.subheader("Methodology")
-    st.write("Graph representation: correlation or supplied pathway edge-list over gene features.")
-    st.write("Spatial descriptors: graph diffusion neighborhoods and feature-field interactions.")
-    st.write("Descriptor bank: expanded graph descriptors reduced to selected informative features.")
-    st.write("Backend: balanced Random Forest classifier.")
-    st.write("Validation: fold-contained representation fitting with leakage sanity controls.")
+
+    st.subheader("Platform Architecture")
+
+    st.markdown(
+        """
+        - **Frontend:** Streamlit
+        - **Backend:** FastAPI
+        - **Authentication:** JWT
+        - **Database:** PostgreSQL
+        - **Deployment:** Render Cloud
+        - **API:** RESTful HTTPS
+        """
+    )
+
+    st.subheader("Prediction Engine")
+
+    st.write(
+        """
+        The QUBE engine represents biological data as graph-based descriptors,
+        generates engineered feature representations, and performs prediction
+        using trained machine learning models deployed on the backend.
+        """
+    )
+
+    st.subheader("Features")
+
+    st.markdown(
+        """
+        - Secure user authentication
+        - Cloud-based prediction API
+        - API key management
+        - Subscription and billing
+        - Usage monitoring
+        - Drug response prediction
+        """
+    )
+
+    st.subheader("Version")
+
+    st.info("QUBE Predict Cloud v3.1")

@@ -2,75 +2,110 @@ from __future__ import annotations
 
 import streamlit as st
 
-from backend.config import ENGINE_METADATA
-from backend.metrics import drug_library_frame
-from backend.model_manager import get_model_manager
-from ui.charts import accuracy_chart, distribution_chart, roc_chart
-from ui.theme import hero, metric_card, status_pill
 
+def render_dashboard(client):
+    st.title("📊 Dashboard")
 
-def render_dashboard() -> None:
-    manager = get_model_manager()
-    models = manager.list_models()
-    active = manager.get_active_model()
-    hero()
-    status_pill(ENGINE_METADATA.validation_status)
+    if not st.session_state.get("authenticated", False):
+        st.warning("Please login first.")
+        return
 
-    st.markdown("#### Home")
-    cols = st.columns(4)
-    latest = _latest_training_date(models)
-    averages = _average_metrics(models)
-    builtin = drug_library_frame()
-    home = {
-        "Engine": ENGINE_METADATA.engine_version,
-        "Models trained": len(models),
-        "Active model": active.drug_name if active else "None",
-        "Latest trained": latest,
-        "Mean Cross Validation Accuracy": _fmt(averages.get("accuracy")),
-        "Average F1": _fmt(averages.get("f1")),
-        "Mean ROC-AUC": _fmt(averages.get("roc_auc")),
-        "Number of folds": active.summary.get("metrics", {}).get("folds", "NA") if active else "NA",
-        "Validation dataset size": active.summary.get("metrics", {}).get("validation_dataset_size", "NA") if active else "NA",
-        "Built-in validated drugs": len(builtin),
-        "Total descriptors": active.summary.get("selected_descriptors", "NA") if active else "NA",
-        "Graph nodes": active.diagnostics.get("graph", {}).get("nodes", "NA") if active else "NA",
-    }
-    for col, (label, value) in zip(st.columns(4) * 3, home.items()):
-        with col:
-            metric_card(label, value)
+    # -----------------------------------------
+    # User
+    # -----------------------------------------
 
-    left, right = st.columns(2)
-    with left:
-        st.plotly_chart(accuracy_chart(), use_container_width=True)
-    with right:
-        st.plotly_chart(roc_chart(), use_container_width=True)
-    st.plotly_chart(distribution_chart(st.session_state.get("last_predictions")), use_container_width=True)
+    try:
+        user = client.me()
+    except Exception as e:
+        st.error(f"Unable to load profile.\n\n{e}")
+        return
 
+    # -----------------------------------------
+    # Dashboard
+    # -----------------------------------------
 
-def _average_metrics(models) -> dict:
-    values = {}
-    for metric in ("accuracy", "f1", "roc_auc"):
-        nums = [
-            record.summary.get("metrics", {}).get(metric)
-            for record in models
-            if record.summary.get("metric_source") == "cross_validation"
-            and record.summary.get("metrics", {}).get(metric) is not None
-        ]
-        values[metric] = sum(nums) / len(nums) if nums else None
-    return values
+    try:
+        dashboard = client.dashboard()
+    except Exception:
+        dashboard = {}
 
+    # -----------------------------------------
+    # Subscription
+    # -----------------------------------------
 
-def _latest_training_date(models) -> str:
-    dates = [record.summary.get("training_date") for record in models if record.summary.get("training_date")]
-    if not dates:
-        return "NA"
-    latest = max(dates)
-    return "Today" if latest[:10] == ENGINE_METADATA.build_date else latest[:10]
+    try:
+        subscription = client.subscription()
+    except Exception:
+        subscription = {}
 
+    st.success("🟢 Connected to QUBE Predict Cloud")
 
-def _fmt(value) -> str:
-    if value is None:
-        return "NA"
-    if isinstance(value, float):
-        return f"{value:.2f}"
-    return str(value)
+    st.write(
+        f"Welcome **{user.get('full_name', user.get('email'))}**"
+    )
+
+    st.divider()
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric(
+            "Plan",
+            subscription.get("plan", "Free"),
+        )
+
+    with col2:
+        st.metric(
+            "Status",
+            subscription.get("status", "Inactive"),
+        )
+
+    with col3:
+        st.metric(
+            "Predictions Used",
+            dashboard.get("predictions_used", 0),
+        )
+
+    with col4:
+        st.metric(
+            "Remaining",
+            dashboard.get("remaining_predictions", 0),
+        )
+
+    st.divider()
+
+    st.subheader("API")
+
+    api_url = st.session_state.get(
+        "api_url",
+        "https://qube-predict.onrender.com",
+    )
+
+    st.code(api_url)
+
+    st.divider()
+
+    st.subheader("System")
+
+    st.write("Backend Status: 🟢 Online")
+
+    st.write("Authentication: JWT")
+
+    st.write("Deployment: Render")
+
+    st.write("Frontend: Streamlit")
+
+    st.divider()
+
+    st.subheader("Recent Activity")
+
+    history = dashboard.get("recent_predictions", [])
+
+    if history:
+        st.dataframe(
+            history,
+            use_container_width=True,
+            hide_index=True,
+        )
+    else:
+        st.info("No predictions yet.")

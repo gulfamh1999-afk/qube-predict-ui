@@ -4,7 +4,6 @@ import streamlit as st
 
 
 def render_login(client):
-
     st.title("🔐 Login")
 
     st.caption("Sign in to your QUBE Predict account")
@@ -12,12 +11,13 @@ def render_login(client):
     # Already logged in
     if st.session_state.get("authenticated", False):
         st.success("You are already logged in.")
+
         if st.button("Go to Dashboard", use_container_width=True):
-            st.success("Login successful!")
             st.rerun()
+
         return
 
-    with st.form("login_form", clear_on_submit=False):
+    with st.form("login_form"):
 
         email = st.text_input(
             "Email",
@@ -39,49 +39,29 @@ def render_login(client):
             use_container_width=True,
         )
 
-if submitted:
+    if submitted:
 
-    if not email or not password:
-        st.error("Please enter your email and password.")
-        return
+        if not email or not password:
+            st.error("Please enter your email and password.")
+            return
 
-    with st.spinner("Signing in..."):
+        with st.spinner("Signing in..."):
 
-        try:
+            try:
 
-            st.write("Step 1: Calling login...")
+                token = client.login(
+                    email=email,
+                    password=password,
+                    remember=remember,
+                )
 
-            token = client.login(
-                email=email,
-                password=password,
-                remember=remember,
-            )
+                user = client.me()
 
-            st.write("✅ Login returned")
+                st.session_state.authenticated = True
+                st.session_state.jwt = token["access_token"]
+                st.session_state.refresh_token = token["refresh_token"]
+                st.session_state.user = user
 
-            st.write("Step 2: Loading profile...")
-
-            user = client.me()
-
-            st.write("✅ Profile loaded")
-
-            st.session_state.authenticated = True
-            st.session_state.jwt = token["access_token"]
-            st.session_state.refresh_token = token["refresh_token"]
-            st.session_state.user = user
-
-            if isinstance(user, dict):
-                st.session_state.api_key = user.get("api_key")
-
-            st.success("Login successful!")
-
-            st.rerun()
-
-        except Exception as e:
-
-            st.error(str(e))              st.session_state.user = user
-
-                # Try loading API key if backend returns it
                 if isinstance(user, dict):
                     st.session_state.api_key = user.get("api_key")
 
@@ -90,7 +70,6 @@ if submitted:
                 st.rerun()
 
             except Exception as e:
-
                 st.error(str(e))
 
     st.divider()
@@ -98,6 +77,7 @@ if submitted:
     col1, col2 = st.columns(2)
 
     with col1:
+
         if st.button(
             "Create Account",
             use_container_width=True,
@@ -106,6 +86,7 @@ if submitted:
             st.rerun()
 
     with col2:
+
         if st.button(
             "Forgot Password",
             use_container_width=True,
