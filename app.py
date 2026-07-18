@@ -27,11 +27,13 @@ from views.billing_history import render_billing_history
 from views.usage import render_usage
 from views.api_keys import render_api_keys
 from views.single_prediction import render_single_prediction
+from views.batch_prediction import render_batch_prediction
 from views.about import render_about
 from views.privacy_policy import render_privacy_policy
 from views.terms import render_terms
 from views.refund_policy import render_refund_policy
 from views.contact import render_contact
+
 
 # ==========================================================
 # PAGE REGISTRY
@@ -45,6 +47,7 @@ PUBLIC_PAGES = {
 PRIVATE_PAGES = {
     "Dashboard": render_dashboard,
     "Single Prediction": render_single_prediction,
+    "Batch Prediction": render_batch_prediction,
     "Usage": render_usage,
     "Billing": render_billing,
     "Billing History": render_billing_history,
