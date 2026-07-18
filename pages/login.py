@@ -13,7 +13,7 @@ def render_login(client):
     if st.session_state.get("authenticated", False):
         st.success("You are already logged in.")
         if st.button("Go to Dashboard", use_container_width=True):
-            st.session_state.page = "Single Prediction"
+            st.success("Login successful!")
             st.rerun()
         return
 
