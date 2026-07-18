@@ -28,6 +28,10 @@ from views.usage import render_usage
 from views.api_keys import render_api_keys
 from views.single_prediction import render_single_prediction
 from views.about import render_about
+from views.privacy_policy import render_privacy_policy
+from views.terms import render_terms
+from views.refund_policy import render_refund_policy
+from views.contact import render_contact
 
 # ==========================================================
 # PAGE REGISTRY
@@ -48,6 +52,10 @@ PRIVATE_PAGES = {
     "Profile": render_profile,
     "About": render_about,
     "Logout": render_logout,
+    "Privacy Policy": render_privacy_policy,
+    "Terms & Conditions": render_terms,
+    "Refund Policy": render_refund_policy,
+    "Contact": render_contact,
 }
 
 # ==========================================================
