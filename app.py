@@ -11,25 +11,23 @@ from ui.theme import apply_theme, render_sidebar
 # PUBLIC PAGES
 # ==========================================================
 
-from pages.login import render_login
-from pages.signup import render_signup
 
 # ==========================================================
 # PRIVATE PAGES
 # ==========================================================
 
-from pages.dashboard import render_dashboard
-from pages.single_prediction import render_single_prediction
-from pages.usage import render_usage
+from views.login import render_login
+from views.signup import render_signup
+from views.logout import render_logout
 
-from pages.billing import render_billing
-from pages.billing_history import render_billing_history
-
-from pages.api_keys import render_api_keys
-from pages.profile import render_profile
-
-from pages.about import render_about
-from pages.logout import render_logout
+from views.dashboard import render_dashboard
+from views.profile import render_profile
+from views.billing import render_billing
+from views.billing_history import render_billing_history
+from views.usage import render_usage
+from views.api_keys import render_api_keys
+from views.single_prediction import render_single_prediction
+from views.about import render_about
 
 # ==========================================================
 # PAGE REGISTRY
