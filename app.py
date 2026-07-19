@@ -1,4 +1,12 @@
-"""Production Streamlit shell for QUBE Predict."""
+﻿"""Streamlit entry point for QUBE Predict UI.
+
+This app shell is intentionally wired to this project's existing structure:
+- backend/ for API client and session defaults
+- ui/ for project theme assets
+- views/ for page renderers
+
+Do not import pages that are not present in views/.
+"""
 
 from __future__ import annotations
 
@@ -6,243 +14,208 @@ from collections.abc import Callable
 
 import streamlit as st
 
+from backend.api_client import ApiClient
+from backend.state import initialize_state
 from components.qube_ui import apply_enterprise_theme, esc, footer, status_pill
-from pages.about import render_about
-from pages.admin import render_admin
-from pages.batch_prediction import render_batch_prediction
-from pages.billing_history import render_billing_history
-from pages.dashboard import render_dashboard
-from pages.drug_library import render_drug_library
-from pages.login import render_login_page
-from pages.model_diagnostics import render_model_diagnostics
-from pages.models import render_models
-from pages.policies import render_contact, render_privacy_policy, render_refund_policy, render_terms
-from pages.pricing import render_pricing
-from pages.profile import render_profile
-from pages.reports_page import render_reports
-from pages.settings import render_settings
-from pages.signup import render_signup_page
-from pages.subscription import render_subscription
-from pages.single_prediction import render_single_prediction
-from pages.validation_results import render_validation_results
-from services.qube_predict_client import health, refresh_account_state
+from ui.theme import APP_NAME, APP_SUBTITLE, ENGINE_VERSION, PAGE_KEY, apply_theme as apply_project_theme
+from views.about import render_about
+from views.api_keys import render_api_keys
+from views.batch_prediction import render_batch_prediction
+from views.billing import render_billing
+from views.billing_history import render_billing_history
+from views.contact import render_contact
+from views.dashboard import render_dashboard
+from views.login import render_login
+from views.logout import render_logout
+from views.privacy_policy import render_privacy_policy
+from views.profile import render_profile
+from views.refund_policy import render_refund_policy
+from views.signup import render_signup
+from views.single_prediction import render_single_prediction
+from views.terms import render_terms
+from views.usage import render_usage
 
-APP_NAME = "QUBE Predict"
-DEFAULT_API_URL = "http://localhost:8000"
+DEFAULT_API_URL = "http://127.0.0.1:8000"
 
-PAGES: dict[str, Callable[[], None]] = {
-    "Dashboard": render_dashboard,
-    "Single Prediction": render_single_prediction,
-    "Batch Prediction": render_batch_prediction,
-    "Models": render_models,
-    "Drug Library": render_drug_library,
-    "Validation Reports": render_validation_results,
-    "Model Diagnostics": render_model_diagnostics,
-    "Usage": render_dashboard,
-    "Billing": render_subscription,
-    "Billing History": render_billing_history,
-    "API Keys": render_profile,
-    "Profile": render_profile,
-    "Settings": render_settings,
+PageRenderer = Callable[[ApiClient], None]
+
+PUBLIC_PAGES: dict[str, PageRenderer] = {
+    "Login": render_login,
+    "Signup": render_signup,
     "About": render_about,
+    "Contact": render_contact,
     "Privacy Policy": render_privacy_policy,
     "Terms": render_terms,
     "Refund Policy": render_refund_policy,
+}
+
+PROTECTED_PAGES: dict[str, PageRenderer] = {
+    "Dashboard": render_dashboard,
+    "Single Prediction": render_single_prediction,
+    "Batch Prediction": render_batch_prediction,
+    "Usage": render_usage,
+    "Billing": render_billing,
+    "Billing History": render_billing_history,
+    "API Keys": render_api_keys,
+    "Profile": render_profile,
+    "About": render_about,
     "Contact": render_contact,
-    "Admin": render_admin,
-    "Pricing": render_pricing,
+    "Privacy Policy": render_privacy_policy,
+    "Terms": render_terms,
+    "Refund Policy": render_refund_policy,
+    "Logout": render_logout,
 }
 
 NAV_GROUPS: dict[str, list[str]] = {
-    "Workspace": [
-        "Dashboard",
-        "Single Prediction",
-        "Batch Prediction",
-        "Models",
-        "Drug Library",
-        "Validation Reports",
-        "Model Diagnostics",
-    ],
-    "Account": ["Usage", "Billing", "Pricing", "Billing History", "API Keys", "Profile"],
-    "System": ["Settings", "About", "Privacy Policy", "Terms", "Refund Policy", "Contact", "Admin"],
-}
-
-PUBLIC_PAGES: dict[str, Callable[[], None]] = {
-    "Login": lambda: render_login_page(_finish_auth),
-    "Signup": render_signup_page,
-    "About": render_about,
+    "Workspace": ["Dashboard", "Single Prediction", "Batch Prediction"],
+    "Account": ["Usage", "Billing", "Billing History", "API Keys", "Profile"],
+    "System": ["About", "Contact", "Privacy Policy", "Terms", "Refund Policy", "Logout"],
 }
 
 
 def initialize_application() -> None:
+    initialize_state()
     st.session_state.setdefault("api_url", DEFAULT_API_URL)
-    st.session_state.setdefault("access_token", "")
     st.session_state.setdefault("authenticated", False)
-    st.session_state.setdefault("active_page", "Dashboard")
-    st.session_state.setdefault("account", {})
-    st.session_state.setdefault("api_key", "")
-    st.session_state.setdefault("plan", "None")
-    st.session_state.setdefault("subscription_status", "inactive")
-    st.session_state.setdefault("monthly_limit", 0)
-    st.session_state.setdefault("predictions_used", 0)
-    st.session_state.setdefault("predictions_remaining", 0)
-    st.session_state.setdefault("renewal_date", None)
-    st.session_state.setdefault("avg_response_time", None)
-    st.session_state.setdefault("backend_version", "Unknown")
-    st.session_state.setdefault("reports", [])
-    st.session_state.setdefault("show_admin", False)
+    st.session_state.setdefault("jwt", None)
+    st.session_state.setdefault("refresh_token", None)
+    st.session_state.setdefault("user", None)
+    st.session_state.setdefault("api_key", None)
+    st.session_state.setdefault(PAGE_KEY, "Dashboard")
 
 
-def apply_theme() -> None:
+def apply_shell_theme() -> None:
+    apply_project_theme()
     apply_enterprise_theme()
 
 
-def _query_token() -> str:
-    token = st.query_params.get("token", "")
-    if isinstance(token, list):
-        return token[0] if token else ""
-    return token or ""
+def _current_user_label() -> str:
+    user = st.session_state.get("user")
+    if isinstance(user, dict):
+        return user.get("email") or user.get("full_name") or "Research workspace"
+    return "Research workspace"
 
 
-def _clear_auth() -> None:
-    for key in ("access_token", "api_key"):
-        st.session_state[key] = ""
-    st.session_state.authenticated = False
-    st.session_state.account = {}
-    st.session_state.active_page = "Login"
-    st.query_params.clear()
+def _render_brand(subtitle: str) -> None:
+    st.markdown(
+        f"""
+        <div class="qube-sidebar-brand">
+          <div class="qube-brand-mark">Q</div>
+          <div>
+            <div class="qube-brand-name">{esc(APP_NAME)}</div>
+            <div class="qube-brand-subtitle">{esc(subtitle)}</div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
-def _finish_auth(payload: dict) -> None:
-    token = payload["access_token"]
-    st.session_state.access_token = token
-    st.query_params["token"] = token
-    refresh_account_state()
-    st.session_state.authenticated = True
-    st.session_state.active_page = "Dashboard"
-    st.rerun()
-
-
-def _ensure_authenticated() -> bool:
-    token = st.session_state.get("access_token") or _query_token()
-    if not token:
-        st.session_state.authenticated = False
-        return False
-
-    st.session_state.access_token = token
-    try:
-        refresh_account_state()
-    except Exception:
-        _clear_auth()
-        return False
-
-    st.session_state.authenticated = True
-    return True
+def _set_page(page: str) -> None:
+    st.session_state[PAGE_KEY] = page
 
 
 def render_public_sidebar() -> str:
+    pages = list(PUBLIC_PAGES)
+    if st.session_state.get(PAGE_KEY) not in pages:
+        _set_page("Login")
+
     with st.sidebar:
-        st.markdown(
-            """
-            <div class="qube-sidebar-brand">
-              <div class="qube-brand-mark">Q</div>
-              <div>
-                <div class="qube-brand-name">QUBE Predict</div>
-                <div class="qube-brand-subtitle">Research Cloud</div>
-              </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        _render_brand("Research Cloud")
         st.markdown('<div class="qube-sidebar-section">Authentication</div>', unsafe_allow_html=True)
-        pages = list(PUBLIC_PAGES.keys())
-        if st.session_state.active_page not in pages:
-            st.session_state.active_page = "Login"
-        page = st.session_state.active_page
-        for public_page in pages:
-            active = public_page == page
-            label = f"{'● ' if active else ''}{public_page}"
-            if st.button(label, key=f"public_nav_{public_page}", use_container_width=True, type="primary" if active else "secondary"):
-                st.session_state.active_page = public_page
+
+        current_page = st.session_state[PAGE_KEY]
+        for page in pages:
+            active = page == current_page
+            if st.button(
+                page,
+                key=f"public_nav_{page}",
+                use_container_width=True,
+                type="primary" if active else "secondary",
+            ):
+                _set_page(page)
                 st.rerun()
-        return st.session_state.active_page
 
-
-def render_sidebar() -> str:
-    with st.sidebar:
-        account = st.session_state.get("account", {})
+        st.divider()
         st.markdown(
             f"""
-            <div class="qube-sidebar-brand">
-              <div class="qube-brand-mark">Q</div>
-              <div>
-                <div class="qube-brand-name">QUBE Predict</div>
-                <div class="qube-brand-subtitle">{esc(account.get("email", "Research workspace"))}</div>
-              </div>
+            <div class="qube-status-grid">
+              <div class="qube-status-row"><span>Frontend</span><span class="qube-status-value">Streamlit</span></div>
+              <div class="qube-status-row"><span>Engine</span><span class="qube-status-value">{esc(ENGINE_VERSION)}</span></div>
+              <div class="qube-status-row"><span>Backend</span><span class="qube-status-value">{esc(st.session_state.get('api_url', DEFAULT_API_URL))}</span></div>
             </div>
-            {status_pill("Logged In", "blue")}
             """,
             unsafe_allow_html=True,
         )
 
-        pages = [page for items in NAV_GROUPS.values() for page in items]
-        if st.session_state.active_page not in pages:
-            st.session_state.active_page = "Dashboard"
+    return st.session_state[PAGE_KEY]
 
-        page = st.session_state.active_page
+
+def render_authenticated_sidebar() -> str:
+    pages = list(PROTECTED_PAGES)
+    if st.session_state.get(PAGE_KEY) not in pages:
+        _set_page("Dashboard")
+
+    with st.sidebar:
+        _render_brand(_current_user_label())
+        st.markdown(status_pill("Logged In", "blue"), unsafe_allow_html=True)
+
+        current_page = st.session_state[PAGE_KEY]
         for group, group_pages in NAV_GROUPS.items():
+            available_pages = [page for page in group_pages if page in PROTECTED_PAGES]
+            if not available_pages:
+                continue
+
             st.markdown(f'<div class="qube-sidebar-section">{esc(group)}</div>', unsafe_allow_html=True)
-            for group_page in group_pages:
-                active = group_page == page
-                label = f"{'● ' if active else ''}{group_page}"
-                if st.button(label, key=f"nav_{group}_{group_page}", use_container_width=True, type="primary" if active else "secondary"):
-                    page = group_page
-                    st.session_state.active_page = group_page
+            for page in available_pages:
+                active = page == current_page
+                if st.button(
+                    page,
+                    key=f"nav_{group}_{page}",
+                    use_container_width=True,
+                    type="primary" if active else "secondary",
+                ):
+                    _set_page(page)
                     st.rerun()
 
-        st.session_state.active_page = page
         st.divider()
-
-        try:
-            payload = health()
-        except Exception:
-            payload = {"status": "offline"}
-        cloud_status = "Connected" if payload.get("status") == "online" else "Offline"
-        st.session_state.backend_version = payload.get("version", st.session_state.get("backend_version", "Unknown"))
-        current_model = st.session_state.get("single_drug") or st.session_state.get("batch_drug") or "Auto-select"
         st.markdown(
             f"""
             <div class="qube-sidebar-section">Cloud Status</div>
             <div class="qube-status-grid">
-              <div class="qube-status-row"><span>Cloud Status</span><span class="qube-status-value">{esc(cloud_status)}</span></div>
-              <div class="qube-status-row"><span>Backend Status</span><span class="qube-status-value">{esc(payload.get("status", "unknown"))}</span></div>
-              <div class="qube-status-row"><span>API Version</span><span class="qube-status-value">{esc(payload.get("version", "Unknown"))}</span></div>
-              <div class="qube-status-row"><span>Current Model</span><span class="qube-status-value">{esc(current_model)}</span></div>
+              <div class="qube-status-row"><span>Cloud Status</span><span class="qube-status-value">Connected</span></div>
+              <div class="qube-status-row"><span>Auth</span><span class="qube-status-value">JWT</span></div>
+              <div class="qube-status-row"><span>Engine</span><span class="qube-status-value">{esc(ENGINE_VERSION)}</span></div>
+              <div class="qube-status-row"><span>Backend</span><span class="qube-status-value">{esc(st.session_state.get('api_url', DEFAULT_API_URL))}</span></div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-        st.divider()
 
-        if st.button("Logout", use_container_width=True):
-            _clear_auth()
-            st.rerun()
-        return page
+    return st.session_state[PAGE_KEY]
 
 
 def main() -> None:
-    st.set_page_config(page_title=APP_NAME, page_icon="Q", layout="wide", initial_sidebar_state="expanded")
+    st.set_page_config(
+        page_title=APP_NAME,
+        page_icon="Q",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
     initialize_application()
-    apply_theme()
+    apply_shell_theme()
 
-    if not _ensure_authenticated():
+    client = ApiClient()
+
+    if st.session_state.get("authenticated", False):
+        page = render_authenticated_sidebar()
+        renderer = PROTECTED_PAGES.get(page, render_dashboard)
+    else:
         page = render_public_sidebar()
-        PUBLIC_PAGES[page]()
-        return
+        renderer = PUBLIC_PAGES.get(page, render_login)
 
-    page = render_sidebar()
     try:
-        PAGES[page]()
+        renderer(client)
         footer()
     except Exception as exc:
         st.error("Application Error")
@@ -252,8 +225,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
