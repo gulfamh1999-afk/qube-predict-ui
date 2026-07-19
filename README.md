@@ -1,28 +1,147 @@
 # 🧬 QUBE Predict
 
-> Open-source AI framework for drug response prediction, cancer response modeling, and biomedical machine learning.
+> **Cloud-Based Biomedical AI Platform for Drug Response Prediction**
 
-QUBE Predict is a modular Streamlit application built for researchers, students, and developers working with drug-response prediction datasets. It provides an interactive interface for training, evaluating, and benchmarking predictive models on pharmacogenomics datasets.
+QUBE Predict is a production-ready biomedical machine learning platform that enables researchers, biotechnology companies, pharmaceutical organizations, and academic institutions to predict drug response from molecular and gene-expression data.
+
+Built with **FastAPI**, **Streamlit**, **PostgreSQL**, and **Scikit-learn**, QUBE Predict combines secure cloud infrastructure with machine learning to deliver fast, scalable, and reproducible drug-response predictions through an intuitive web interface and REST API.
 
 ---
 
 # 🚀 Features
 
-- 🧬 Single sample drug-response prediction
-- 📦 Batch prediction from CSV files
-- 📊 Interactive dashboard
-- 📈 Model diagnostics
-- 🧪 Validation reports
-- 📑 PDF report generation
-- ⚙️ Modular backend architecture
-- 🎯 Drug library browser
-- 📉 Performance metrics
-- 🔬 Biomedical machine learning workflow
-- 🎨 Modern Streamlit interface
+### 🔬 Biomedical Prediction
+
+- 🧬 Single Sample Drug Response Prediction
+- 📦 Batch Prediction from CSV Files
+- 🎯 Drug-Specific Machine Learning Models
+- 📈 Probability & Response Score
+- ⭐ Treatment Suitability Rating
+- 📊 Confidence Estimation
+- 🏥 Clinical Interpretation
+- ⚠️ Treatment Failure Risk Assessment
 
 ---
 
-# ⚙️ Installation
+### ☁️ Cloud Platform
+
+- 🔐 JWT Authentication
+- 🔑 API Key Management
+- 💳 Razorpay Subscription Billing
+- 📊 Usage Dashboard
+- 📈 Billing History
+- 👤 User Profile Management
+- 🚀 REST API
+- 📉 Prediction Usage Tracking
+
+---
+
+### 📊 Machine Learning
+
+- 327+ Pre-trained Biomedical Models
+- Scikit-learn Classification Pipelines
+- Drug Response Prediction
+- Batch Inference
+- Model Registry
+- Validation Metrics
+- Performance Benchmarking
+
+---
+
+# 🌐 Live Platform
+
+### Frontend
+
+https://qube-predict.streamlit.app
+
+### Backend API
+
+https://qube-predict.onrender.com
+
+---
+
+# 🏗 Platform Architecture
+
+```
+                Streamlit Cloud
+                     │
+                     ▼
+          QUBE Predict Web Platform
+                     │
+             Secure REST API
+                     │
+                     ▼
+         FastAPI Backend (Render)
+                     │
+        ┌────────────┴────────────┐
+        ▼                         ▼
+ PostgreSQL Database       Machine Learning Models
+        │                         │
+        └────────────┬────────────┘
+                     ▼
+            Drug Response Engine
+```
+
+---
+
+# 🔬 Example Prediction Workflow
+
+1. Create an account
+2. Subscribe to a prediction plan
+3. Receive an API Key
+4. Upload molecular or gene-expression data
+5. Select a drug
+6. Run prediction
+7. Receive:
+
+- Drug Response Prediction
+- Probability Score
+- Confidence Level
+- Treatment Suitability
+- Clinical Interpretation
+- Downloadable Results
+
+---
+
+# 📦 REST API Example
+
+## Request
+
+```http
+POST /api/v1/predict
+```
+
+```json
+{
+    "drug": "(5Z)-7-Oxozeaenol",
+    "sample": {
+        "...": "..."
+    }
+}
+```
+
+## Response
+
+```json
+{
+    "drug": "(5Z)-7-Oxozeaenol",
+    "prediction": "Moderately Sensitive",
+    "probability": 0.7267,
+    "response_score": 72.7,
+    "confidence": "Moderate",
+    "confidence_score": 0.7267,
+    "treatment_suitability": "Potential Candidate",
+    "treatment_stars": 3,
+    "treatment_rating": "★★★☆☆",
+    "treatment_failure_risk": "Moderate",
+    "clinical_interpretation": "...",
+    "disclaimer": "For research and clinical decision support only."
+}
+```
+
+---
+
+# 💻 Installation
 
 Clone the repository
 
@@ -38,7 +157,7 @@ Install dependencies
 pip install -r requirements.txt
 ```
 
-Launch the application
+Run locally
 
 ```bash
 streamlit run app.py
@@ -46,125 +165,121 @@ streamlit run app.py
 
 ---
 
-# ▶️ Quick Start
-
-1. Launch Streamlit.
-2. Upload a supported dataset.
-3. Select prediction mode.
-4. Train or load a model.
-5. Generate predictions.
-6. View metrics.
-7. Export reports.
-
----
-
-# 📊 Supported Datasets
-
-QUBE Predict currently supports biomedical datasets including:
-
-- CCLE Gene Expression
-- GDSC Drug Response
-- CCLE + GDSC merged datasets
-- User-provided CSV datasets
-- Gene expression matrices
-- Drug sensitivity datasets
-
-Typical input includes:
-
-- Gene expression features
-- Drug name
-- IC50 values
-- Binary response labels
-- Continuous response values
-
----
-
-# 🏗️ Project Architecture
+# 📂 Project Structure
 
 ```
 Qube-Predict/
 
 ├── app.py
 ├── backend/
-│   ├── config.py
-│   ├── data.py
-│   ├── metrics.py
-│   ├── qube_wrapper.py
-│   └── state.py
+│   ├── backend_api_server.py
+│   ├── auth.py
+│   ├── billing.py
+│   ├── database.py
+│   ├── predictor.py
+│   ├── model_registry.py
+│   ├── models.py
+│   └── schemas.py
 │
-├── pages/
+├── views/
 │   ├── dashboard.py
 │   ├── single_prediction.py
 │   ├── batch_prediction.py
-│   ├── validation_results.py
-│   ├── model_diagnostics.py
-│   ├── drug_library.py
-│   └── settings.py
+│   ├── billing.py
+│   ├── billing_history.py
+│   ├── api_keys.py
+│   ├── profile.py
+│   └── contact.py
 │
-├── reports/
-├── validation/
-├── ui/
-├── assets/
 ├── models/
-└── requirements.txt
+├── assets/
+├── reports/
+├── requirements.txt
+└── README.md
 ```
 
 ---
 
-# 🧠 Technologies
+# 🧠 Technology Stack
 
-- Python
-- Streamlit
+### Backend
+
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- JWT Authentication
+- Razorpay API
+
+### Machine Learning
+
 - Scikit-learn
 - Pandas
 - NumPy
+- Joblib
+
+### Frontend
+
+- Streamlit
 - Plotly
 - Matplotlib
-- Joblib
+
+### Deployment
+
+- Render
+- Streamlit Cloud
+
+---
+
+# 📊 Supported Data
+
+QUBE Predict supports molecular and pharmacogenomics datasets including:
+
+- Gene Expression Matrices
+- Drug Response Data
+- CCLE
+- GDSC
+- CCLE + GDSC Merged Datasets
+- User Uploaded CSV Files
 
 ---
 
 # 🎯 Current Capabilities
 
-- Drug response prediction
-- Model evaluation
-- Classification metrics
-- Regression metrics
-- Interactive visualization
-- Report generation
-- Biomedical data preprocessing
+✅ Secure User Authentication
+
+✅ Subscription Billing
+
+✅ API Key Generation
+
+✅ Cloud Prediction API
+
+✅ Single Sample Prediction
+
+✅ Batch Prediction
+
+✅ Clinical Prediction Reports
+
+✅ Usage Monitoring
+
+✅ Billing Dashboard
+
+✅ Drug Response Modelling
 
 ---
 
-# 🛣️ Roadmap
+# 🛣 Roadmap
 
-Future development may include:
+Upcoming features include:
 
-- Additional machine learning models
-- Deep learning integration
-- AutoML pipelines
 - Explainable AI (SHAP)
-- Survival analysis
-- Multi-omics support
-- Cloud deployment
-- API integration
-
----
-
-# 🤝 Contributing
-
-Contributions are welcome.
-
-You can contribute by:
-
-- Improving documentation
-- Fixing bugs
-- Adding datasets
-- Implementing new algorithms
-- Improving visualizations
-- Creating tutorials
-
-Fork the repository, create a feature branch, and submit a Pull Request.
+- Multi-omics Integration
+- Survival Analysis
+- PDF Clinical Reports
+- Model Versioning
+- Enterprise SSO
+- Team Workspaces
+- Docker Deployment
+- Kubernetes Support
 
 ---
 
@@ -178,7 +293,7 @@ See the LICENSE file for details.
 
 # 📚 Citation
 
-If you use QUBE Predict in your research, please cite the repository:
+If you use QUBE Predict in your research, please cite:
 
 ```bibtex
 @software{qube_predict,
@@ -192,14 +307,20 @@ If you use QUBE Predict in your research, please cite the repository:
 
 ---
 
-# ⭐ Support
+# 🤝 Contributing
 
-If you find this project useful:
+Contributions are welcome.
 
-- ⭐ Star the repository
-- 🍴 Fork the project
-- 🐞 Report issues
-- 💡 Suggest new features
+You can contribute by:
+
+- Improving documentation
+- Reporting bugs
+- Adding biomedical datasets
+- Enhancing machine learning models
+- Improving the user interface
+- Optimizing prediction performance
+
+Please fork the repository, create a feature branch, and submit a Pull Request.
 
 ---
 
@@ -213,12 +334,20 @@ https://github.com/gulfamh1999-afk
 
 ---
 
-## Acknowledgements
+# ⭐ Support
 
-This project builds upon open scientific datasets and the Python scientific ecosystem, including Streamlit, Scikit-learn, Pandas, NumPy, and related open-source libraries.
+If you find QUBE Predict useful:
+
+⭐ Star the repository
+
+🍴 Fork the project
+
+🐞 Report Issues
+
+💡 Suggest New Features
 
 ---
 
-**QUBE Predict**
+## 🧬 QUBE Predict
 
-Open-source AI framework for biomedical machine learning and drug response prediction.
+**Advancing precision medicine through scalable biomedical machine learning.**
