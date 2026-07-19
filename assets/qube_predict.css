@@ -1,28 +1,35 @@
 :root {
-  --bg: #ffffff;
-  --panel: #ffffff;
-  --panel-soft: #f6f8fc;
-  --line: rgba(28, 45, 80, 0.14);
-  --text: #111827;
-  --muted: #5f6b7a;
-  --blue: #1769e0;
-  --purple: #5b4fd6;
-  --green: #158f61;
+  --bg: #070912;
+  --panel: #101424;
+  --panel-2: #151b31;
+  --line: rgba(142, 163, 255, 0.2);
+  --text: #eef3ff;
+  --muted: #9ca9c9;
+  --blue: #2bd4ff;
+  --purple: #7c5cff;
+  --green: #38d996;
+  --red: #ff5c7a;
 }
 
 .stApp {
-  background: var(--bg);
+  background: radial-gradient(circle at top left, rgba(43, 212, 255, .12), transparent 28%),
+    radial-gradient(circle at top right, rgba(124, 92, 255, .14), transparent 30%),
+    var(--bg);
   color: var(--text);
 }
 
 [data-testid="stSidebar"] {
-  background: #f7f9fd;
+  background: #080b16;
   border-right: 1px solid var(--line);
 }
 
-h1, h2, h3 { letter-spacing: 0; }
+h1, h2, h3 {
+  letter-spacing: 0;
+}
 
-.hero { padding: 18px 0 10px; }
+.hero {
+  padding: 18px 0 10px;
+}
 
 .hero-title {
   font-size: clamp(2rem, 5vw, 4.8rem);
@@ -42,8 +49,8 @@ h1, h2, h3 { letter-spacing: 0; }
   padding: 18px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--panel);
-  box-shadow: 0 12px 32px rgba(15, 23, 42, .08);
+  background: linear-gradient(180deg, rgba(21,27,49,.92), rgba(12,16,30,.92));
+  box-shadow: 0 16px 46px rgba(0, 0, 0, .2);
 }
 
 .metric-label {
@@ -64,10 +71,17 @@ h1, h2, h3 { letter-spacing: 0; }
   gap: 8px;
   padding: 6px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(21,143,97,.28);
-  background: rgba(21,143,97,.08);
-  color: #0f6f49;
+  border: 1px solid rgba(56,217,150,.35);
+  background: rgba(56,217,150,.1);
+  color: #baffdf;
   font-weight: 650;
+}
+
+.section-panel {
+  padding: 18px;
+  border-radius: 8px;
+  background: rgba(16, 20, 36, .72);
+  border: 1px solid var(--line);
 }
 
 .small-muted {
@@ -77,13 +91,13 @@ h1, h2, h3 { letter-spacing: 0; }
 
 .stButton button, .stDownloadButton button {
   border-radius: 8px;
-  border: 1px solid rgba(23, 105, 224, .36);
-  background: linear-gradient(90deg, #1769e0, #5b4fd6);
+  border: 1px solid rgba(43, 212, 255, .42);
+  background: linear-gradient(90deg, #1679ff, #7c5cff);
   color: white;
   font-weight: 700;
 }
 
-[data-testid="stDataFrame"], [data-testid="stTable"] {
+.stDataFrame, [data-testid="stTable"] {
   border: 1px solid var(--line);
   border-radius: 8px;
 }
