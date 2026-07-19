@@ -16,13 +16,13 @@ Graph-Based Drug Response Prediction Platform
 
 ### Sales
 
-sales@qubepredict.ai
+[salesqubepredict@gmail.com](mailto:salesqubepredict@gmail.com)
 
 ---
 
 ### Support
 
-support@qubepredict.ai
+[salesqubepredict@gmail.com](mailto:salesqubepredict@gmail.com)
 
 ---
 
