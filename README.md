@@ -304,7 +304,30 @@ If you use QUBE Predict in your research, please cite:
   url = {https://github.com/gulfamh1999-afk/Qube-Predict}
 }
 ```
+# 📄 Technical Paper
 
+The research paper describing the methodology, experimental evaluation, and validation of **QUBE Predict** is publicly available on Zenodo.
+
+**Title**
+
+> **QUBE Predict: A Graph-Based Quantum-Inspired Machine Learning Framework for Drug Response Prediction**
+
+**DOI**
+
+https://doi.org/10.5281/zenodo.21455765
+
+**Zenodo Record**
+
+https://zenodo.org/records/21455765
+
+The paper describes:
+
+- Graph-based biological descriptor generation
+- Quantum-inspired representation learning
+- Drug response prediction methodology
+- Experimental evaluation on CCLE and GDSC pharmacogenomic datasets
+- Statistical validation and leakage control experiments
+- Modular machine learning framework design
 ---
 
 # 🤝 Contributing
