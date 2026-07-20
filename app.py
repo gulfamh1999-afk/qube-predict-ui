@@ -35,7 +35,10 @@ from views.single_prediction import render_single_prediction
 from views.terms import render_terms
 from views.usage import render_usage
 
-DEFAULT_API_URL = "http://127.0.0.1:8000"
+DEFAULT_API_URL = st.secrets.get(
+    "API_URL",
+    "https://qube-predict.onrender.com"
+)
 
 PageRenderer = Callable[[ApiClient], None]
 
