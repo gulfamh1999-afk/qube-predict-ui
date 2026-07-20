@@ -8,10 +8,15 @@ class ApiClient:
 
     def __init__(self):
 
-        self.base_url = st.session_state.get(
-            "api_url",
-            "http://127.0.0.1:8000"
-        )
+        self.base_url = st.session_state.get("api_url")
+
+        if not self.base_url:
+            self.base_url = st.secrets.get(
+                "API_URL",
+                "https://qube-predict.onrender.com"
+            )
+
+        self.base_url = self.base_url.rstrip("/")
 
     # ==========================================================
     # INTERNAL
