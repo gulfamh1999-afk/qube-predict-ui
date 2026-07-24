@@ -1,15 +1,11 @@
 from __future__ import annotations
 
 import streamlit as st
-from streamlit_cookies_manager import EncryptedCookieManager
 
-cookies = EncryptedCookieManager(
-    prefix="qube_predict/",
-    password="QUBE_PREDICT_CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_2026",
-)
 
-if not cookies.ready():
-    st.stop()
+def _request_browser_storage_sync(action: str = "save") -> None:
+    st.session_state["_browser_storage_action"] = action
+    st.session_state["_browser_storage_nonce"] = st.session_state.get("_browser_storage_nonce", 0) + 1
 
 
 def render_login(client):
@@ -25,6 +21,7 @@ def render_login(client):
 
         if st.button("Go to Dashboard", use_container_width=True):
             st.session_state.page = "Dashboard"
+            _request_browser_storage_sync("save")
             st.rerun()
 
         return
@@ -78,13 +75,7 @@ def render_login(client):
                 if isinstance(user, dict):
                     st.session_state.api_key = user.get("api_key")
 
-                # -----------------------------
-                # Save persistent cookies
-                # -----------------------------
-                cookies["jwt"] = token["access_token"]
-                cookies["refresh_token"] = token["refresh_token"]
-                cookies["page"] = "Dashboard"
-                cookies.save()
+                _request_browser_storage_sync("save")
 
                 st.success("Login successful!")
 
@@ -106,8 +97,7 @@ def render_login(client):
         ):
 
             st.session_state.page = "Signup"
-            cookies["page"] = "Signup"
-            cookies.save()
+            _request_browser_storage_sync("save")
 
             st.rerun()
 

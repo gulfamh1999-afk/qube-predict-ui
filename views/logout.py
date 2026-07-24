@@ -1,15 +1,11 @@
 from __future__ import annotations
 
 import streamlit as st
-from streamlit_cookies_manager import EncryptedCookieManager
 
-cookies = EncryptedCookieManager(
-    prefix="qube_predict/",
-    password="QUBE_PREDICT_CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_2026",
-)
 
-if not cookies.ready():
-    st.stop()
+def _request_browser_storage_sync(action: str = "clear") -> None:
+    st.session_state["_browser_storage_action"] = action
+    st.session_state["_browser_storage_nonce"] = st.session_state.get("_browser_storage_nonce", 0) + 1
 
 
 def render_logout(client):
@@ -25,6 +21,7 @@ def render_logout(client):
             use_container_width=True,
         ):
             st.session_state.page = "Login"
+            _request_browser_storage_sync("clear")
             st.rerun()
 
         return
@@ -56,9 +53,7 @@ def render_logout(client):
             st.session_state.api_key = None
             st.session_state.page = "Login"
 
-            # Clear cookies
-            cookies.clear()
-            cookies.save()
+            _request_browser_storage_sync("clear")
 
             st.success("You have been logged out successfully.")
 
@@ -72,4 +67,5 @@ def render_logout(client):
         ):
 
             st.session_state.page = "Dashboard"
+            _request_browser_storage_sync("save")
             st.rerun()
