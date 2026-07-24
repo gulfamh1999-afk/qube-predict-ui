@@ -1,18 +1,30 @@
 from __future__ import annotations
 
 import streamlit as st
+from streamlit_cookies_manager import EncryptedCookieManager
+
+cookies = EncryptedCookieManager(
+    prefix="qube_predict/",
+    password="QUBE_PREDICT_CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_2026",
+)
+
+if not cookies.ready():
+    st.stop()
 
 
 def render_login(client):
+
     st.title("🔐 Login")
 
     st.caption("Sign in to your QUBE Predict account")
 
     # Already logged in
     if st.session_state.get("authenticated", False):
+
         st.success("You are already logged in.")
 
         if st.button("Go to Dashboard", use_container_width=True):
+            st.session_state.page = "Dashboard"
             st.rerun()
 
         return
@@ -61,15 +73,25 @@ def render_login(client):
                 st.session_state.jwt = token["access_token"]
                 st.session_state.refresh_token = token["refresh_token"]
                 st.session_state.user = user
+                st.session_state.page = "Dashboard"
 
                 if isinstance(user, dict):
                     st.session_state.api_key = user.get("api_key")
+
+                # -----------------------------
+                # Save persistent cookies
+                # -----------------------------
+                cookies["jwt"] = token["access_token"]
+                cookies["refresh_token"] = token["refresh_token"]
+                cookies["page"] = "Dashboard"
+                cookies.save()
 
                 st.success("Login successful!")
 
                 st.rerun()
 
             except Exception as e:
+
                 st.error(str(e))
 
     st.divider()
@@ -82,7 +104,11 @@ def render_login(client):
             "Create Account",
             use_container_width=True,
         ):
+
             st.session_state.page = "Signup"
+            cookies["page"] = "Signup"
+            cookies.save()
+
             st.rerun()
 
     with col2:
@@ -91,6 +117,7 @@ def render_login(client):
             "Forgot Password",
             use_container_width=True,
         ):
+
             st.info(
                 "Password reset is available through the backend API."
             )

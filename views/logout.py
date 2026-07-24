@@ -1,18 +1,30 @@
 from __future__ import annotations
 
 import streamlit as st
+from streamlit_cookies_manager import EncryptedCookieManager
+
+cookies = EncryptedCookieManager(
+    prefix="qube_predict/",
+    password="QUBE_PREDICT_CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_2026",
+)
+
+if not cookies.ready():
+    st.stop()
 
 
 def render_logout(client):
+
     st.title("🚪 Logout")
 
     if not st.session_state.get("authenticated", False):
+
         st.info("You are already logged out.")
 
         if st.button(
             "Go to Login",
             use_container_width=True,
         ):
+            st.session_state.page = "Login"
             st.rerun()
 
         return
@@ -36,15 +48,17 @@ def render_logout(client):
             except Exception:
                 pass
 
-            # Remove authentication data
-            for key in [
-                "authenticated",
-                "jwt",
-                "refresh_token",
-                "api_key",
-                "user",
-            ]:
-                st.session_state.pop(key, None)
+            # Clear session
+            st.session_state.authenticated = False
+            st.session_state.jwt = None
+            st.session_state.refresh_token = None
+            st.session_state.user = None
+            st.session_state.api_key = None
+            st.session_state.page = "Login"
+
+            # Clear cookies
+            cookies.clear()
+            cookies.save()
 
             st.success("You have been logged out successfully.")
 
@@ -56,4 +70,6 @@ def render_logout(client):
             "Cancel",
             use_container_width=True,
         ):
+
+            st.session_state.page = "Dashboard"
             st.rerun()
