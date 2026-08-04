@@ -98,10 +98,6 @@ def initialize_application() -> None:
     st.session_state.setdefault(PAGE_KEY, "Dashboard")
 
     saved_page = cookies.get("page")
-    st.write("JWT cookie:", bool(cookies.get("jwt")))
-    st.write("Refresh cookie:", bool(cookies.get("refresh_token")))
-    st.write("Saved page:", saved_page)
-
     if saved_page:
         st.session_state[PAGE_KEY] = saved_page
 
@@ -150,6 +146,7 @@ def _set_page(page: str) -> None:
 
     cookies["page"] = page
     cookies.save()
+
 
 def render_public_sidebar() -> str:
     pages = list(PUBLIC_PAGES)
@@ -253,15 +250,8 @@ def main() -> None:
     ):
 
         try:
-            st.write("Starting refresh...")
-
             result = client.refresh()
-            st.write("Refresh result:", result)
-
-            st.write("JWT after refresh:", bool(st.session_state.get("jwt")))
-
             user = client.me()
-            st.write("User:", user)
 
             st.session_state.authenticated = True
             st.session_state.user = user
@@ -273,15 +263,9 @@ def main() -> None:
             cookies["refresh_token"] = st.session_state.refresh_token
             cookies.save()
 
-        except Exception as e:
-
-            st.error(f"Refresh failed: {e}")
-
-            # Leave the cookies intact while debugging.
-            # Once everything works, you can restore:
-            #
-            # cookies.clear()
-            # cookies.save()
+        except Exception:
+            # Silence debug logging for production auto-login attempts
+            pass
 
     if st.session_state.get("authenticated", False):
 
@@ -304,6 +288,7 @@ def main() -> None:
 
         with st.expander("Technical Details"):
             st.exception(exc)
+
 
 if __name__ == "__main__":
     main()
