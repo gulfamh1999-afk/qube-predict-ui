@@ -111,4 +111,4 @@ def render_login(client):
 
             st.info(
                 "Password reset is available through the backend API."
-            )
+            ) 
