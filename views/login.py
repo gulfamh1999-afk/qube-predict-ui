@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import streamlit as st
+from ui.theme import PAGE_KEY
 
 
 def _request_browser_storage_sync(action: str = "save") -> None:
@@ -20,7 +21,7 @@ def render_login(client):
         st.success("You are already logged in.")
 
         if st.button("Go to Dashboard", use_container_width=True):
-            st.session_state.page = "Dashboard"
+            st.session_state[PAGE_KEY] = "Dashboard"
             _request_browser_storage_sync("save")
             st.rerun()
 
@@ -70,7 +71,7 @@ def render_login(client):
                 st.session_state.jwt = token["access_token"]
                 st.session_state.refresh_token = token["refresh_token"]
                 st.session_state.user = user
-                st.session_state.page = "Dashboard"
+                st.session_state[PAGE_KEY] = "Dashboard"
 
                 if isinstance(user, dict):
                     st.session_state.api_key = user.get("api_key")
@@ -96,7 +97,7 @@ def render_login(client):
             use_container_width=True,
         ):
 
-            st.session_state.page = "Signup"
+            st.session_state[PAGE_KEY] = "Signup"
             _request_browser_storage_sync("save")
 
             st.rerun()
