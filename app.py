@@ -15,7 +15,7 @@ from collections.abc import Callable
 import streamlit as st
 
 from backend.api_client import ApiClient
-from backend.navigation import cookies, navigate_to
+from backend.navigation import navigate_to, read_cookie, write_cookies
 from backend.state import initialize_state
 from components.qube_ui import apply_enterprise_theme, esc, footer, status_pill
 from ui.theme import APP_NAME, APP_SUBTITLE, ENGINE_VERSION, PAGE_KEY, apply_theme as apply_project_theme
@@ -35,15 +35,11 @@ from views.signup import render_signup
 from views.single_prediction import render_single_prediction
 from views.terms import render_terms
 from views.usage import render_usage
-from streamlit_cookies_manager import EncryptedCookieManager
 
 DEFAULT_API_URL = st.secrets.get(
     "API_URL",
     "https://qube-predict.onrender.com"
 )
-if not cookies.ready():
-    st.stop()
-
 
 PageRenderer = Callable[[ApiClient], None]
 
@@ -93,14 +89,14 @@ def initialize_application() -> None:
     st.session_state.setdefault("api_key", None)
     st.session_state.setdefault(PAGE_KEY, "Dashboard")
 
-    saved_page = cookies.get("page")
+    saved_page = read_cookie("page")
     if saved_page:
         st.session_state[PAGE_KEY] = saved_page
 
     if not st.session_state.authenticated:
 
-        jwt = cookies.get("jwt")
-        refresh = cookies.get("refresh_token")
+        jwt = read_cookie("jwt")
+        refresh = read_cookie("refresh_token")
 
         if jwt:
             st.session_state.jwt = jwt
@@ -251,9 +247,10 @@ def main() -> None:
             if isinstance(user, dict):
                 st.session_state.api_key = user.get("api_key")
 
-            cookies["jwt"] = st.session_state.jwt
-            cookies["refresh_token"] = st.session_state.refresh_token
-            cookies.save()
+            write_cookies({
+                "jwt": st.session_state.jwt,
+                "refresh_token": st.session_state.refresh_token,
+            })
 
         except Exception:
             # Silence debug logging for production auto-login attempts
