@@ -1,4 +1,4 @@
-﻿"""Streamlit entry point for QUBE Predict UI.
+"""Streamlit entry point for QUBE Predict UI.
 
 This app shell is intentionally wired to this project's existing structure:
 - backend/ for API client and session defaults
@@ -15,6 +15,7 @@ from collections.abc import Callable
 import streamlit as st
 
 from backend.api_client import ApiClient
+from backend.navigation import cookies, navigate_to
 from backend.state import initialize_state
 from components.qube_ui import apply_enterprise_theme, esc, footer, status_pill
 from ui.theme import APP_NAME, APP_SUBTITLE, ENGINE_VERSION, PAGE_KEY, apply_theme as apply_project_theme
@@ -40,11 +41,6 @@ DEFAULT_API_URL = st.secrets.get(
     "API_URL",
     "https://qube-predict.onrender.com"
 )
-cookies = EncryptedCookieManager(
-    prefix="qube_predict/",
-    password="QUBE_PREDICT_CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_2026",
-)
-
 if not cookies.ready():
     st.stop()
 
@@ -141,11 +137,7 @@ def _render_brand(subtitle: str) -> None:
 
 
 def _set_page(page: str) -> None:
-
-    st.session_state[PAGE_KEY] = page
-
-    cookies["page"] = page
-    cookies.save()
+    navigate_to(page)
 
 
 def render_public_sidebar() -> str:

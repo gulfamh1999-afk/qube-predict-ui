@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import streamlit as st
+from backend.navigation import navigate_to
 from ui.theme import PAGE_KEY
 
 
@@ -97,7 +98,7 @@ def render_login(client):
             use_container_width=True,
         ):
 
-            st.session_state[PAGE_KEY] = "Signup"
+            navigate_to("Signup")
             _request_browser_storage_sync("save")
 
             st.rerun()
