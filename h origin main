@@ -1,0 +1,125 @@
+[1mdiff --git a/app.py b/app.py[m
+[1mindex 8cbd48c..a69de43 100644[m
+[1m--- a/app.py[m
+[1m+++ b/app.py[m
+[36m@@ -15,7 +15,7 @@[m [mfrom collections.abc import Callable[m
+ import streamlit as st[m
+ [m
+ from backend.api_client import ApiClient[m
+[31m-from backend.navigation import cookies, navigate_to[m
+[32m+[m[32mfrom backend.navigation import navigate_to, read_cookie, write_cookies[m
+ from backend.state import initialize_state[m
+ from components.qube_ui import apply_enterprise_theme, esc, footer, status_pill[m
+ from ui.theme import APP_NAME, APP_SUBTITLE, ENGINE_VERSION, PAGE_KEY, apply_theme as apply_project_theme[m
+[36m@@ -35,15 +35,11 @@[m [mfrom views.signup import render_signup[m
+ from views.single_prediction import render_single_prediction[m
+ from views.terms import render_terms[m
+ from views.usage import render_usage[m
+[31m-from streamlit_cookies_manager import EncryptedCookieManager[m
+ [m
+ DEFAULT_API_URL = st.secrets.get([m
+     "API_URL",[m
+     "https://qube-predict.onrender.com"[m
+ )[m
+[31m-if not cookies.ready():[m
+[31m-    st.stop()[m
+[31m-[m
+ [m
+ PageRenderer = Callable[[ApiClient], None][m
+ [m
+[36m@@ -93,14 +89,14 @@[m [mdef initialize_application() -> None:[m
+     st.session_state.setdefault("api_key", None)[m
+     st.session_state.setdefault(PAGE_KEY, "Dashboard")[m
+ [m
+[31m-    saved_page = cookies.get("page")[m
+[32m+[m[32m    saved_page = read_cookie("page")[m
+     if saved_page:[m
+         st.session_state[PAGE_KEY] = saved_page[m
+ [m
+     if not st.session_state.authenticated:[m
+ [m
+[31m-        jwt = cookies.get("jwt")[m
+[31m-        refresh = cookies.get("refresh_token")[m
+[32m+[m[32m        jwt = read_cookie("jwt")[m
+[32m+[m[32m        refresh = read_cookie("refresh_token")[m
+ [m
+         if jwt:[m
+             st.session_state.jwt = jwt[m
+[36m@@ -251,9 +247,10 @@[m [mdef main() -> None:[m
+             if isinstance(user, dict):[m
+                 st.session_state.api_key = user.get("api_key")[m
+ [m
+[31m-            cookies["jwt"] = st.session_state.jwt[m
+[31m-            cookies["refresh_token"] = st.session_state.refresh_token[m
+[31m-            cookies.save()[m
+[32m+[m[32m            write_cookies({[m
+[32m+[m[32m                "jwt": st.session_state.jwt,[m
+[32m+[m[32m                "refresh_token": st.session_state.refresh_token,[m
+[32m+[m[32m            })[m
+ [m
+         except Exception:[m
+             # Silence debug logging for production auto-login attempts[m
+[1mdiff --git a/backend/navigation.py b/backend/navigation.py[m
+[1mindex e51e7cf..cb2f573 100644[m
+[1m--- a/backend/navigation.py[m
+[1m+++ b/backend/navigation.py[m
+[36m@@ -8,15 +8,51 @@[m [mfrom streamlit_cookies_manager import EncryptedCookieManager[m
+ from ui.theme import PAGE_KEY[m
+ [m
+ [m
+[31m-cookies = EncryptedCookieManager([m
+[31m-    prefix="qube_predict/",[m
+[31m-    password="QUBE_PREDICT_CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_2026",[m
+[31m-)[m
+[32m+[m[32mtry:[m
+[32m+[m[32m    cookies = EncryptedCookieManager([m
+[32m+[m[32m        prefix="qube_predict/",[m
+[32m+[m[32m        password="QUBE_PREDICT_CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_2026",[m
+[32m+[m[32m    )[m
+[32m+[m[32mexcept Exception:[m
+[32m+[m[32m    cookies = None[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef cookies_ready() -> bool:[m
+[32m+[m[32m    """Return whether browser cookie storage is currently available."""[m
+[32m+[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        return cookies is not None and bool(cookies.ready())[m
+[32m+[m[32m    except Exception:[m
+[32m+[m[32m        return False[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef read_cookie(name: str):[m
+[32m+[m[32m    """Read a cookie without allowing storage failures to interrupt the app."""[m
+[32m+[m
+[32m+[m[32m    if not cookies_ready():[m
+[32m+[m[32m        return None[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        return cookies.get(name)[m
+[32m+[m[32m    except Exception:[m
+[32m+[m[32m        return None[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef write_cookies(values: dict[str, str | None]) -> None:[m
+[32m+[m[32m    """Persist cookies when available; storage errors are non-fatal."""[m
+[32m+[m
+[32m+[m[32m    if not cookies_ready():[m
+[32m+[m[32m        return[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        for name, value in values.items():[m
+[32m+[m[32m            if value is not None:[m
+[32m+[m[32m                cookies[name] = value[m
+[32m+[m[32m        cookies.save()[m
+[32m+[m[32m    except Exception:[m
+[32m+[m[32m        return[m
+ [m
+ [m
+ def navigate_to(page: str) -> None:[m
+     """Set the active page and persist it for the next browser session."""[m
+ [m
+     st.session_state[PAGE_KEY] = page[m
+[31m-    cookies["page"] = page[m
+[31m-    cookies.save()[m
+\ No newline at end of file[m
+[32m+[m[32m    write_cookies({"page": page})[m
+\ No newline at end of file[m
