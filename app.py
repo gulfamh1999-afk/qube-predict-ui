@@ -38,7 +38,7 @@ from views.usage import render_usage
 
 DEFAULT_API_URL = st.secrets.get(
     "API_URL",
-    "https://qube-predict.onrender.com"
+    "https://qube-predict-api.onrender.com"
 )
 
 PageRenderer = Callable[[ApiClient], None]
