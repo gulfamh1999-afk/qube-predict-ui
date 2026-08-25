@@ -11,10 +11,13 @@ class ApiClient:
         self.base_url = st.session_state.get("api_url")
 
         if not self.base_url:
-            self.base_url = st.secrets.get(
-                "API_URL",
-                "https://qube-predict.onrender.com"
-            )
+            try:
+                self.base_url = st.secrets.get(
+                    "API_URL",
+                    "https://qube-predict-api.onrender.com",
+                )
+            except Exception:
+                self.base_url = "https://qube-predict-api.onrender.com"
 
         self.base_url = self.base_url.rstrip("/")
 
@@ -49,33 +52,90 @@ class ApiClient:
 
         headers = kwargs.pop("headers", {})
 
-        headers.update(self._headers())
+        # ------------------------------------------------------
+        # Public endpoints must NOT receive stale credentials
+        # ------------------------------------------------------
 
-        response = requests.request(
-            method,
-            url,
-            headers=headers,
-            timeout=60,
-            **kwargs,
-        )
+        public_endpoints = {
+            "/login",
+            "/signup",
+            "/forgot-password",
+            "/reset-password",
+        }
+
+        if endpoint not in public_endpoints:
+            headers.update(self._headers())
+
+        try:
+
+            response = requests.request(
+                method,
+                url,
+                headers=headers,
+                timeout=120,
+                **kwargs,
+            )
+
+        except requests.RequestException as e:
+
+            raise Exception(
+                f"Could not connect to QUBE Predict API: {e}"
+            )
+
+        # ------------------------------------------------------
+        # Authentication
+        # ------------------------------------------------------
 
         if response.status_code == 401:
 
+            if endpoint == "/login":
+
+                try:
+                    detail = response.json().get(
+                        "detail",
+                        "Incorrect email or password",
+                    )
+                except Exception:
+                    detail = "Incorrect email or password"
+
+                raise Exception(detail)
+
             st.session_state.authenticated = False
-
             st.session_state.jwt = None
-
             st.session_state.refresh_token = None
-
             st.session_state.user = None
 
             raise Exception("Authentication expired.")
 
-        response.raise_for_status()
+        # ------------------------------------------------------
+        # Other API errors
+        # ------------------------------------------------------
+
+        if not response.ok:
+
+            try:
+                data = response.json()
+                detail = data.get("detail", response.text)
+            except Exception:
+                detail = response.text
+
+            raise Exception(
+                f"API error {response.status_code}: {detail}"
+            )
+
+        # ------------------------------------------------------
+        # Response
+        # ------------------------------------------------------
 
         if response.content:
 
-            return response.json()
+            try:
+                return response.json()
+            except ValueError:
+
+                raise Exception(
+                    "API returned an invalid JSON response."
+                )
 
         return {}
 
@@ -114,28 +174,29 @@ class ApiClient:
         )
 
         st.session_state.jwt = result["access_token"]
-
         st.session_state.refresh_token = result["refresh_token"]
-
         st.session_state.authenticated = True
 
         return result
 
     def refresh(self):
 
-        payload = {
-            "refresh_token":
-            st.session_state.refresh_token
-        }
+        refresh_token = st.session_state.get(
+            "refresh_token"
+        )
+
+        if not refresh_token:
+            raise Exception("No refresh token available.")
 
         result = self._request(
             "POST",
             "/refresh",
-            json=payload,
+            json={
+                "refresh_token": refresh_token
+            },
         )
 
         st.session_state.jwt = result["access_token"]
-
         st.session_state.refresh_token = result["refresh_token"]
 
         return result
@@ -300,13 +361,9 @@ class ApiClient:
     def logout(self):
 
         st.session_state.authenticated = False
-
         st.session_state.jwt = None
-
         st.session_state.refresh_token = None
-
         st.session_state.user = None
-
         st.session_state.api_key = None
 
         return True
